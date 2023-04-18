@@ -1,19 +1,20 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128, to_binary, Addr, Timestamp};
-use cw_utils::NativeBalance;
+use cosmwasm_std::{
+    to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Timestamp,
+    Uint128,
+};
 use cw2::set_contract_version;
+use cw_utils::NativeBalance;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::*;
 use crate::utils::generate_id;
 
-
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:neariot-cosmwasm";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
-
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -36,16 +37,46 @@ pub fn execute(
     _msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match _msg {
-        ExecuteMsg::RegisterUser{}=>execute_register_user(_deps,_env,_info),
-        ExecuteMsg::CreateProject { metadata } => execute_create_project(_deps, _env, _info, metadata),
-        ExecuteMsg::UpdateProject { id, metadata } => execute_update_project(_deps, _env, _info, id, metadata),
-        ExecuteMsg::UpdateTimestamp { id, timestamp } => execute_update_timestamp(_deps, _env, _info, id, timestamp),
-        ExecuteMsg::DeleteProject {  } => todo!(),
-        ExecuteMsg::CreateOffer { id, min_price, metadata,expire_at } => execute_create_project_offer(_deps, _env, _info, id, min_price, metadata,expire_at),
-        ExecuteMsg::UpdateOffer { id, offer_id, min_price, metadata,expire_at } => execute_update_project_offer(_deps, _env, _info, id, offer_id, min_price, metadata,expire_at),
-        ExecuteMsg::DeleteOffer { id, offer_id } => execute_delete_project_offer(_deps, _env, _info, id, offer_id),
-        ExecuteMsg::BuyOffer { project_id, offer_id, metadata, rate } => execute_buy_project_offer(_deps, _env, _info, project_id, offer_id, metadata, rate),
-        ExecuteMsg::RateOffer { project_id, offer_id, rate } => execute_rate_project_offer(_deps, _env, _info, project_id, offer_id, rate),
+        ExecuteMsg::RegisterUser {} => execute_register_user(_deps, _env, _info),
+        ExecuteMsg::CreateProject { metadata } => {
+            execute_create_project(_deps, _env, _info, metadata)
+        }
+        ExecuteMsg::UpdateProject { id, metadata } => {
+            execute_update_project(_deps, _env, _info, id, metadata)
+        }
+        ExecuteMsg::UpdateTimestamp { id, timestamp } => {
+            execute_update_timestamp(_deps, _env, _info, id, timestamp)
+        }
+        ExecuteMsg::DeleteProject {} => todo!(),
+        ExecuteMsg::CreateOffer {
+            id,
+            min_price,
+            metadata,
+            expire_at,
+        } => execute_create_project_offer(_deps, _env, _info, id, min_price, metadata, expire_at),
+        ExecuteMsg::UpdateOffer {
+            id,
+            offer_id,
+            min_price,
+            metadata,
+            expire_at,
+        } => execute_update_project_offer(
+            _deps, _env, _info, id, offer_id, min_price, metadata, expire_at,
+        ),
+        ExecuteMsg::DeleteOffer { id, offer_id } => {
+            execute_delete_project_offer(_deps, _env, _info, id, offer_id)
+        }
+        ExecuteMsg::BuyOffer {
+            project_id,
+            offer_id,
+            metadata,
+            rate,
+        } => execute_buy_project_offer(_deps, _env, _info, project_id, offer_id, metadata, rate),
+        ExecuteMsg::RateOffer {
+            project_id,
+            offer_id,
+            rate,
+        } => execute_rate_project_offer(_deps, _env, _info, project_id, offer_id, rate),
         ExecuteMsg::WatchProject { id } => execute_watch_project(_deps, _env, _info, id),
         ExecuteMsg::UnwatchProject { id } => execute_unwatch_project(_deps, _env, _info, id),
         ExecuteMsg::RateProject { id, rate } => execute_rate_project(_deps, _env, _info, id, rate),
@@ -55,19 +86,24 @@ pub fn execute(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
     match _msg {
-        QueryMsg::GetUser{id}=>to_binary(&query_get_user(_deps,id)?),
-        QueryMsg::ListUser {  } => to_binary(&query_list_user(_deps)?),
+        QueryMsg::GetUser { id } => to_binary(&query_get_user(_deps, id)?),
+        QueryMsg::ListUser {} => to_binary(&query_list_user(_deps)?),
         QueryMsg::GetProject { id } => to_binary(&query_get_project(_deps, id)?),
-        QueryMsg::ListProject {  } => to_binary(&query_list_project(_deps)?),
-        QueryMsg::GetProjectOffers { project_id} => to_binary(&query_get_project_offers(_deps, project_id)?),
-        QueryMsg::GetProjectOffer { project_id, offer_id  } => to_binary(&query_get_project_offer(_deps, project_id, offer_id)?),
-        QueryMsg::GetFunding {  } => todo!(),
-        QueryMsg::ListFunding {  } => todo!(),
-        QueryMsg::GetWatching {  } => todo!(),
-        QueryMsg::GetRating {  } => todo!(),
-        QueryMsg::ListRating {  } => todo!(),
-        QueryMsg::GetBalance {  } => todo!(),
-        QueryMsg::GetAdmin {  } => to_binary(&query_get_admin(_deps)?),
+        QueryMsg::ListProject {} => to_binary(&query_list_project(_deps)?),
+        QueryMsg::GetProjectOffers { project_id } => {
+            to_binary(&query_get_project_offers(_deps, project_id)?)
+        }
+        QueryMsg::GetProjectOffer {
+            project_id,
+            offer_id,
+        } => to_binary(&query_get_project_offer(_deps, project_id, offer_id)?),
+        QueryMsg::GetFunding {} => todo!(),
+        QueryMsg::ListFunding {} => todo!(),
+        QueryMsg::GetWatching {} => todo!(),
+        QueryMsg::GetRating {} => todo!(),
+        QueryMsg::ListRating {} => todo!(),
+        QueryMsg::GetBalance {} => todo!(),
+        QueryMsg::GetAdmin {} => to_binary(&query_get_admin(_deps)?),
     }
 }
 
@@ -86,13 +122,12 @@ pub fn execute_register_user(
     };
     let mut users = USERS.load(_deps.storage).unwrap_or_default();
     //if load fail, create new
-    if users.is_empty(){
+    if users.is_empty() {
         users = vec![];
     }
     users.push(user);
     USERS.save(_deps.storage, &users)?;
     Ok(Response::default())
-
 }
 
 pub fn execute_create_project(
@@ -104,7 +139,7 @@ pub fn execute_create_project(
     let block_info = _env.block.clone();
     let project = Project {
         owner: _info.sender.clone(),
-        id: generate_id(_info.sender.clone(),_env.block),
+        id: generate_id(_info.sender.clone(), _env.block),
         metadata: _metadata,
         avg_rate: Uint128::zero(),
         create_at: block_info.time,
@@ -116,16 +151,16 @@ pub fn execute_create_project(
     };
     let mut projects = PROJECTS.load(_deps.storage).unwrap_or_default();
     //if load fail, create new
-    if projects.is_empty(){
+    if projects.is_empty() {
         projects = vec![];
     }
     let mut users = USERS.load(_deps.storage).unwrap_or_default();
     //if load fail, create new
-    if users.is_empty(){
+    if users.is_empty() {
         users = vec![];
     }
-    users.iter_mut().for_each(|user|{
-        if user.address.eq(&_info.sender.clone()){
+    users.iter_mut().for_each(|user| {
+        if user.address.eq(&_info.sender.clone()) {
             user.project_owned.push(project.id.clone());
         }
     });
@@ -148,10 +183,13 @@ pub fn execute_update_project(
     let mut projects = PROJECTS.load(_deps.storage).unwrap_or_default();
     //if load fail, create new
     assert!(projects.is_empty(), "project not found");
-    assert!(projects.iter().any(|project| project.id == _id), "project not found");
+    assert!(
+        projects.iter().any(|project| project.id == _id),
+        "project not found"
+    );
 
-    projects.iter_mut().for_each(|project|{
-        if project.id == _id{
+    projects.iter_mut().for_each(|project| {
+        if project.id == _id {
             assert!(project.owner == _info.sender, "not owner");
             project.metadata = _metadata.to_owned();
         }
@@ -160,7 +198,6 @@ pub fn execute_update_project(
     PROJECTS.save(_deps.storage, &projects)?;
     Ok(Response::default())
 }
-
 
 pub fn execute_update_timestamp(
     _deps: DepsMut,
@@ -172,9 +209,12 @@ pub fn execute_update_timestamp(
     let mut projects = PROJECTS.load(_deps.storage).unwrap_or_default();
     //if load fail, create new
     assert!(projects.is_empty(), "project not found");
-    assert!(projects.iter().any(|project| project.id == _id), "project not found");
-    projects.iter_mut().for_each(|project|{
-        if project.id == _id{
+    assert!(
+        projects.iter().any(|project| project.id == _id),
+        "project not found"
+    );
+    projects.iter_mut().for_each(|project| {
+        if project.id == _id {
             assert!(project.owner == _info.sender, "not owner");
             project.milestone = Timestamp::from_seconds(_timestamp.to_owned());
         }
@@ -196,12 +236,15 @@ pub fn execute_create_project_offer(
     let mut projects = PROJECTS.load(_deps.storage).unwrap_or_default();
     //if load fail, create new
     assert!(projects.is_empty(), "project not found");
-    assert!(projects.iter().any(|project| project.id == _id), "project not found");
-    projects.iter_mut().for_each(|project|{
-        if project.id == _id{
+    assert!(
+        projects.iter().any(|project| project.id == _id),
+        "project not found"
+    );
+    projects.iter_mut().for_each(|project| {
+        if project.id == _id {
             assert!(project.owner == _info.sender.clone(), "not owner");
             let offer = Offer {
-                id: generate_id(_info.sender.clone(),_env.block.clone()),
+                id: generate_id(_info.sender.clone(), _env.block.clone()),
                 metadata: _metadata.clone(),
                 min_price: _price,
                 create_at: _env.block.time,
@@ -228,12 +271,15 @@ pub fn execute_update_project_offer(
     let mut projects = PROJECTS.load(_deps.storage).unwrap_or_default();
     //if load fail, create new
     assert!(projects.is_empty(), "project not found");
-    assert!(projects.iter().any(|project| project.id == _id), "project not found");
-    projects.iter_mut().for_each(|project|{
-        if project.id == _id{
+    assert!(
+        projects.iter().any(|project| project.id == _id),
+        "project not found"
+    );
+    projects.iter_mut().for_each(|project| {
+        if project.id == _id {
             assert!(project.owner == _info.sender, "not owner");
-            project.offers.iter_mut().for_each(|offer|{
-                if offer.id == _offer_id{
+            project.offers.iter_mut().for_each(|offer| {
+                if offer.id == _offer_id {
                     offer.min_price = _price;
                     offer.metadata = _metadata.clone();
                     offer.expire_at = Timestamp::from_seconds(_expire);
@@ -256,9 +302,12 @@ pub fn execute_delete_project_offer(
     let mut projects = PROJECTS.load(_deps.storage).unwrap_or_default();
     //if load fail, create new
     assert!(projects.is_empty(), "project not found");
-    assert!(projects.iter().any(|project| project.id == _id), "project not found");
-    projects.iter_mut().for_each(|project|{
-        if project.id == _id{
+    assert!(
+        projects.iter().any(|project| project.id == _id),
+        "project not found"
+    );
+    projects.iter_mut().for_each(|project| {
+        if project.id == _id {
             assert!(project.owner == _info.sender, "not owner");
             project.offers.retain(|offer| offer.id != _offer_id);
         }
@@ -280,18 +329,29 @@ pub fn execute_buy_project_offer(
     let mut projects = PROJECTS.load(_deps.storage).unwrap_or_default();
     //if load fail, create new
     assert!(projects.is_empty(), "project not found");
-    assert!(projects.iter().any(|project| project.id == _id), "project not found");
+    assert!(
+        projects.iter().any(|project| project.id == _id),
+        "project not found"
+    );
     let amount = _info.funds[0].amount;
-    projects.iter_mut().for_each(|project|{
-        if project.id == _id{
-            let offer = project.offers.iter().find(|offer| offer.id == _offer_id).unwrap();
-            assert!(amount >= offer.min_price, "{}", ContractError::InsufficientFunds {});
+    projects.iter_mut().for_each(|project| {
+        if project.id == _id {
+            let offer = project
+                .offers
+                .iter()
+                .find(|offer| offer.id == _offer_id)
+                .unwrap();
+            assert!(
+                amount >= offer.min_price,
+                "{}",
+                ContractError::InsufficientFunds {}
+            );
             let bougth_offer = BougthOffer {
-                id: generate_id(_info.sender.clone(),_env.block.clone()),
+                id: generate_id(_info.sender.clone(), _env.block.clone()),
                 price: amount,
                 buyer: _info.sender.clone(),
                 create_at: _env.block.time,
-                rate:_rate,
+                rate: _rate,
                 metadata: _metadata.clone(),
             };
             project.bougth_offers.push(bougth_offer);
@@ -312,16 +372,16 @@ pub fn execute_buy_project_offer(
     // });
     // USERS.save(_deps.storage,  &user)?;
     let mut users = USERS.load(_deps.storage).unwrap_or_default();
-    users.iter_mut().for_each(|user|{
-        if user.address == _info.sender{
+    users.iter_mut().for_each(|user| {
+        if user.address == _info.sender {
             user.total_spent = user.total_spent + amount;
-            user.clone().project_funded.iter_mut().for_each(|project|{
-                if project != &_id{
+            user.clone().project_funded.iter_mut().for_each(|project| {
+                if project != &_id {
                     user.project_funded.push(_id.clone());
                 }
             });
-            user.clone().project_watched.iter().for_each(|project|{
-                if project != &_id{
+            user.clone().project_watched.iter().for_each(|project| {
+                if project != &_id {
                     user.project_watched.push(_id.clone());
                 }
             });
@@ -331,7 +391,7 @@ pub fn execute_buy_project_offer(
     Ok(Response::default())
 }
 
-pub fn must_pay_funds(balance:&NativeBalance,denom:&str) -> Result<Uint128,ContractError>{
+pub fn must_pay_funds(balance: &NativeBalance, denom: &str) -> Result<Uint128, ContractError> {
     match balance.0.len() {
         0 => Err(ContractError::NoFunds {}),
         1 => {
@@ -358,11 +418,14 @@ pub fn execute_rate_project_offer(
     let mut projects = PROJECTS.load(_deps.storage).unwrap_or_default();
     //if load fail, create new
     assert!(projects.is_empty(), "project not found");
-    assert!(projects.iter().any(|project| project.id == _id), "project not found");
-    projects.iter_mut().for_each(|project|{
-        if project.id == _id{
-            project.bougth_offers.iter_mut().for_each(|offer|{
-                if offer.id == _offer_id{
+    assert!(
+        projects.iter().any(|project| project.id == _id),
+        "project not found"
+    );
+    projects.iter_mut().for_each(|project| {
+        if project.id == _id {
+            project.bougth_offers.iter_mut().for_each(|offer| {
+                if offer.id == _offer_id {
                     offer.rate = _rate;
                 }
             });
@@ -381,11 +444,14 @@ pub fn execute_watch_project(
     let mut projects = PROJECTS.load(_deps.storage).unwrap_or_default();
     //if load fail, create new
     assert!(projects.is_empty(), "project not found");
-    assert!(projects.iter().any(|project| project.id == _id), "project not found");
-    projects.iter_mut().for_each(|project|{
-        if project.id == _id{
-            project.watchers.iter().for_each(|watcher|{
-                if watcher.eq(&_info.sender.clone()){
+    assert!(
+        projects.iter().any(|project| project.id == _id),
+        "project not found"
+    );
+    projects.iter_mut().for_each(|project| {
+        if project.id == _id {
+            project.watchers.iter().for_each(|watcher| {
+                if watcher.eq(&_info.sender.clone()) {
                     project.clone().watchers.push(_info.sender.clone());
                 }
             });
@@ -398,16 +464,16 @@ pub fn execute_watch_project(
     //     }
     // });
     let mut users = USERS.load(_deps.storage).unwrap_or_default();
-    users.iter_mut().for_each(|user|{
-        if user.address == _info.sender{
-            user.clone().project_watched.iter().for_each(|project|{
-                if !project.clone().eq(&_id.clone()){
+    users.iter_mut().for_each(|user| {
+        if user.address == _info.sender {
+            user.clone().project_watched.iter().for_each(|project| {
+                if !project.clone().eq(&_id.clone()) {
                     user.project_watched.push(_id.clone());
                 }
             });
         }
     });
-    USERS.save(_deps.storage,  &users)?;
+    USERS.save(_deps.storage, &users)?;
     PROJECTS.save(_deps.storage, &projects)?;
     Ok(Response::default())
 }
@@ -421,21 +487,24 @@ pub fn execute_unwatch_project(
     let mut projects = PROJECTS.load(_deps.storage).unwrap_or_default();
     //if load fail, create new
     assert!(projects.is_empty(), "project not found");
-    assert!(projects.iter().any(|project| project.id == _id), "project not found");
-    projects.iter_mut().for_each(|project|{
-        if project.id == _id{
+    assert!(
+        projects.iter().any(|project| project.id == _id),
+        "project not found"
+    );
+    projects.iter_mut().for_each(|project| {
+        if project.id == _id {
             project.watchers.retain(|watcher| watcher != &_info.sender);
         }
     });
     // let mut user = USERS.load(_deps.storage)?;
     // user.project_watched.retain(|project| project != &_id);
     let mut users = USERS.load(_deps.storage).unwrap_or_default();
-    users.iter_mut().for_each(|user|{
-        if user.address == _info.sender{
+    users.iter_mut().for_each(|user| {
+        if user.address == _info.sender {
             user.project_watched.retain(|project| project != &_id);
         }
     });
-    USERS.save(_deps.storage,  &users)?;
+    USERS.save(_deps.storage, &users)?;
     PROJECTS.save(_deps.storage, &projects)?;
     Ok(Response::default())
 }
@@ -450,12 +519,17 @@ pub fn execute_rate_project(
     let mut projects = PROJECTS.load(_deps.storage).unwrap_or_default();
     //if load fail, create new
     assert!(projects.is_empty(), "project not found");
-    assert!(projects.iter().any(|project| project.id == _id), "project not found");
-    projects.iter_mut().for_each(|project|{
-        if project.id == _id{
-            project.avg_rate = project.bougth_offers.iter().fold(Uint128::zero(),|acc,offer|{
-                acc + offer.rate
-            }) / Uint128::from(project.bougth_offers.len() as u128);
+    assert!(
+        projects.iter().any(|project| project.id == _id),
+        "project not found"
+    );
+    projects.iter_mut().for_each(|project| {
+        if project.id == _id {
+            project.avg_rate = project
+                .bougth_offers
+                .iter()
+                .fold(Uint128::zero(), |acc, offer| acc + offer.rate)
+                / Uint128::from(project.bougth_offers.len() as u128);
         }
     });
     PROJECTS.save(_deps.storage, &projects)?;
@@ -493,7 +567,11 @@ pub fn query_get_project_offers(_deps: Deps, _id: String) -> StdResult<Vec<Offer
 pub fn query_get_project_offer(_deps: Deps, _id: String, _offer_id: String) -> StdResult<Offer> {
     let projects = PROJECTS.load(_deps.storage)?;
     let project = projects.iter().find(|project| project.id == _id).unwrap();
-    let offer = project.offers.iter().find(|offer| offer.id == _offer_id).unwrap();
+    let offer = project
+        .offers
+        .iter()
+        .find(|offer| offer.id == _offer_id)
+        .unwrap();
     Ok(offer.to_owned())
 }
 
@@ -501,7 +579,6 @@ pub fn query_get_admin(_deps: Deps) -> StdResult<Addr> {
     let admin = ADMIN.load(_deps.storage)?;
     Ok(admin.to_owned())
 }
-
 
 // #[inline]
 // fn coin_to_string(amount: Uint128, denom: &str) -> String {
@@ -512,7 +589,7 @@ pub fn query_get_admin(_deps: Deps) -> StdResult<Addr> {
 mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cosmwasm_std::{coins, from_binary, CosmosMsg,  Coin, BankMsg};
+    use cosmwasm_std::{coins, from_binary, BankMsg, Coin, CosmosMsg};
 
     #[test]
     fn proper_initialization() {
@@ -537,7 +614,9 @@ mod tests {
         let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
         assert_eq!(0, res.messages.len());
 
-        let msg = QueryMsg::GetUser { id: Addr::unchecked("ciuz") };
+        let msg = QueryMsg::GetUser {
+            id: Addr::unchecked("ciuz"),
+        };
         let res = query(deps.as_ref(), mock_env(), msg).unwrap();
         let user: User = from_binary(&res).unwrap();
         assert_eq!(user.total_spent, Uint128::zero());
@@ -547,7 +626,7 @@ mod tests {
     }
 
     #[test]
-    fn create_project(){
+    fn create_project() {
         let mut deps = mock_dependencies();
 
         let msg = InstantiateMsg {};
@@ -656,5 +735,4 @@ mod tests {
     //     }));
 
     // }
-
 }

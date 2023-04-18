@@ -1,8 +1,8 @@
-use base64::{Engine, engine::general_purpose};
+use base64::{engine::general_purpose, Engine};
 use cosmwasm_std::{Addr, BlockInfo};
 
 #[allow(unused_imports)]
-pub fn generate_id(id:Addr,block_info:BlockInfo) -> String {
+pub fn generate_id(id: Addr, block_info: BlockInfo) -> String {
     let account_id = id;
     let mut raw_id = account_id.to_owned().to_string();
     raw_id.push_str("_");

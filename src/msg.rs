@@ -1,74 +1,70 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Uint128, Addr};
+use cosmwasm_std::{Addr, Uint128};
 use cw20::Denom;
 
-use crate::state::{User, Project, Offer};
+use crate::state::{Offer, Project, User};
 
 #[cw_serde]
-pub struct InstantiateMsg {
-
-}
+pub struct InstantiateMsg {}
 #[cw_serde]
 pub enum ExecuteMsg {
-
     // User
-    RegisterUser {
-    },
+    RegisterUser {},
 
     // Project
     CreateProject {
-        metadata:String,
+        metadata: String,
     },
     UpdateProject {
-        id:String,
-        metadata:String,
+        id: String,
+        metadata: String,
     },
     UpdateTimestamp {
-        id:String,
-        timestamp:u64,
+        id: String,
+        timestamp: u64,
     },
     DeleteProject {},
     CreateOffer {
-        id:String,
-        min_price:Uint128,
-        metadata:String,
-        expire_at:u64,
+        id: String,
+        min_price: Uint128,
+        metadata: String,
+        expire_at: u64,
     },
     UpdateOffer {
-        id:String,
-        offer_id:String,
-        min_price:Uint128,
-        metadata:String,
-        expire_at:u64,
+        id: String,
+        offer_id: String,
+        min_price: Uint128,
+        metadata: String,
+        expire_at: u64,
     },
     DeleteOffer {
-        id:String,
-        offer_id:String,
+        id: String,
+        offer_id: String,
     },
     BuyOffer {
-        project_id:String,
-        offer_id:String,
-        metadata:String,
-        rate:Uint128,
+        project_id: String,
+        offer_id: String,
+        metadata: String,
+        rate: Uint128,
     },
     RateOffer {
-        project_id:String,
-        offer_id:String,
-        rate:Uint128,
+        project_id: String,
+        offer_id: String,
+        rate: Uint128,
     },
 
     // Watching
     WatchProject {
-        id:String,
+        id: String,
     },
     UnwatchProject {
-        id:String,
+        id: String,
     },
 
     // Rating
     RateProject {
-        id:String,
-        rate:Uint128,
+        id: String,
+        rate: Uint128,
     },
 }
 
@@ -77,23 +73,24 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     // User
     #[returns(User)]
-    GetUser {
-        id:Addr,
-    },
+    GetUser { id: Addr },
     #[returns(Vec<User>)]
     ListUser {},
 
     // Project
     #[returns(Project)]
-    GetProject {id:String},
+    GetProject { id: String },
     #[returns(Vec<Project>)]
     ListProject {},
 
     // Project Offers
     #[returns(Vec<Offer>)]
-    GetProjectOffers {project_id:String},
+    GetProjectOffers { project_id: String },
     #[returns(Offer)]
-    GetProjectOffer {project_id:String, offer_id:String},
+    GetProjectOffer {
+        project_id: String,
+        offer_id: String,
+    },
 
     // Funding
     #[returns(String)]

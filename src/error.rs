@@ -1,8 +1,8 @@
-use std::{string::FromUtf8Error, num::TryFromIntError};
+use std::{num::TryFromIntError, string::FromUtf8Error};
 
 use cosmwasm_std::StdError;
-use thiserror::Error;
 use cw_utils::PaymentError;
+use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum ContractError {
@@ -51,4 +51,3 @@ impl From<TryFromIntError> for ContractError {
         ContractError::AmountOverflow {}
     }
 }
-
