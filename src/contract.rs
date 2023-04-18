@@ -1,13 +1,9 @@
-use std::error::Error;
-
-#[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult,
     Timestamp, Uint128,
 };
 use cw2::set_contract_version;
-use cw_utils::NativeBalance;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -18,7 +14,7 @@ use crate::utils::generate_id;
 const CONTRACT_NAME: &str = "crates.io:neariot-cosmwasm";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[entry_point]
 pub fn instantiate(
     _deps: DepsMut,
     _env: Env,
@@ -29,7 +25,7 @@ pub fn instantiate(
     Ok(Response::default())
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[entry_point]
 pub fn execute(
     _deps: DepsMut,
     _env: Env,
@@ -83,7 +79,7 @@ pub fn execute(
     }
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[entry_point]
 pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
     match _msg {
         QueryMsg::GetUser { id } => to_binary(&query_get_user(_deps, id)?),
@@ -102,7 +98,6 @@ pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetWatching {} => unimplemented!(),
         QueryMsg::GetRating {} => unimplemented!(),
         QueryMsg::ListRating {} => unimplemented!(),
-        QueryMsg::GetBalance {} => unimplemented!(),
     }
 }
 
@@ -610,7 +605,7 @@ pub fn query_get_project_offer(_deps: Deps, _id: String, _offer_id: String) -> S
 mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cosmwasm_std::{coins, from_binary, BankMsg, Coin, CosmosMsg};
+    use cosmwasm_std::{coins, from_binary};
 
     #[test]
     fn get_user() {

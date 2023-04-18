@@ -1,8 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Uint128};
-use cw20::{Cw20Coin, Denom};
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 use crate::state::{Offer, Project, User};
 
@@ -113,8 +110,4 @@ pub enum QueryMsg {
 
     #[returns(Project)]
     ListRating {},
-
-    // Balance
-    #[returns(Denom)]
-    GetBalance {},
 }
