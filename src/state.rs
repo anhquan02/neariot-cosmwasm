@@ -43,6 +43,5 @@ pub struct Project {
     pub milestone: Timestamp,
 }
 
-pub const ADMIN: Item<Addr> = Item::new("admin");
 pub const USERS: Item<Vec<User>> = Item::new("users");
 pub const PROJECTS: Item<Vec<Project>> = Item::new("projects");

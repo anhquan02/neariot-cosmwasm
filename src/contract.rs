@@ -1,8 +1,10 @@
+use std::error::Error;
+
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Timestamp,
-    Uint128,
+    to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult,
+    Timestamp, Uint128,
 };
 use cw2::set_contract_version;
 use cw_utils::NativeBalance;
@@ -23,9 +25,7 @@ pub fn instantiate(
     _info: MessageInfo,
     _msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
-    ADMIN.save(_deps.storage, &_info.sender)?;
     set_contract_version(_deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-
     Ok(Response::default())
 }
 
@@ -103,7 +103,6 @@ pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetRating {} => todo!(),
         QueryMsg::ListRating {} => todo!(),
         QueryMsg::GetBalance {} => todo!(),
-        QueryMsg::GetAdmin {} => to_binary(&query_get_admin(_deps)?),
     }
 }
 
@@ -538,46 +537,68 @@ pub fn execute_rate_project(
 
 pub fn query_get_user(_deps: Deps, _id: Addr) -> StdResult<User> {
     let users = USERS.load(_deps.storage)?;
+    if users.is_empty() {
+        return Err(StdError::generic_err("user not found"));
+    }
     let user = users.iter().find(|user| user.name == _id).unwrap();
     Ok(user.to_owned())
 }
 
 pub fn query_list_user(_deps: Deps) -> StdResult<Vec<User>> {
-    let users = USERS.load(_deps.storage)?;
+    let mut users = USERS.load(_deps.storage).unwrap_or_default();
+    if users.is_empty() {
+        users = vec![]
+    }
     Ok(users.to_owned())
 }
 
 pub fn query_get_project(_deps: Deps, _id: String) -> StdResult<Project> {
     let projects = PROJECTS.load(_deps.storage)?;
+    if projects.is_empty() {
+        return Err(StdError::generic_err("project not found"));
+    }
     let project = projects.iter().find(|project| project.id == _id).unwrap();
+    if Some(project) == None {
+        return Err(StdError::generic_err("project not found"));
+    }
     Ok(project.to_owned())
 }
 
 pub fn query_list_project(_deps: Deps) -> StdResult<Vec<Project>> {
-    let projects = PROJECTS.load(_deps.storage)?;
+    let mut projects = PROJECTS.load(_deps.storage).unwrap_or_default();
+    if projects.is_empty() {
+        projects = vec![]
+    }
     Ok(projects.to_owned())
 }
 
 pub fn query_get_project_offers(_deps: Deps, _id: String) -> StdResult<Vec<Offer>> {
-    let projects = PROJECTS.load(_deps.storage)?;
+    let projects = PROJECTS.load(_deps.storage).unwrap_or_default();
+    if projects.is_empty() {
+        return Err(StdError::generic_err("project not found"));
+    }
     let project = projects.iter().find(|project| project.id == _id).unwrap();
+    if Some(project) == None {
+        return Err(StdError::generic_err("project not found"));
+    }
     Ok(project.offers.to_owned())
 }
 
 pub fn query_get_project_offer(_deps: Deps, _id: String, _offer_id: String) -> StdResult<Offer> {
-    let projects = PROJECTS.load(_deps.storage)?;
+    let projects = PROJECTS.load(_deps.storage).unwrap_or_default();
+    if projects.is_empty() {
+        return Err(StdError::generic_err("project not found"));
+    }
     let project = projects.iter().find(|project| project.id == _id).unwrap();
+    if Some(project) == None {
+        return Err(StdError::generic_err("project not found"));
+    }
     let offer = project
         .offers
         .iter()
         .find(|offer| offer.id == _offer_id)
         .unwrap();
     Ok(offer.to_owned())
-}
-
-pub fn query_get_admin(_deps: Deps) -> StdResult<Addr> {
-    let admin = ADMIN.load(_deps.storage)?;
-    Ok(admin.to_owned())
 }
 
 // #[inline]
@@ -590,6 +611,51 @@ mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cosmwasm_std::{coins, from_binary, BankMsg, Coin, CosmosMsg};
+
+    #[test]
+    fn get_user() {
+        let mut deps = mock_dependencies();
+
+        let msg = InstantiateMsg {};
+        let info = mock_info("creator", &coins(1000, "orai"));
+        let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+        let msg = ExecuteMsg::RegisterUser {};
+        let info = mock_info("ciuz", &coins(1000, "orai"));
+        let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+        let msg = QueryMsg::GetUser {
+            id: Addr::unchecked("ciuz".to_string()),
+        };
+        let res = query(deps.as_ref(), mock_env(), msg).unwrap();
+        let user: User = from_binary(&res).unwrap();
+        assert_eq!(user.name, "ciuz");
+    }
+
+    #[test]
+    fn get_list_users() {
+        let mut deps = mock_dependencies();
+
+        let msg = InstantiateMsg {};
+        let info = mock_info("creator", &coins(1000, "orai"));
+        let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+        // let msg = ExecuteMsg::RegisterUser {};
+        // let info = mock_info("ciuz", &coins(1000, "orai"));
+        // let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+        // let msg = QueryMsg::GetUser {
+        //     id: Addr::unchecked("ciuz".to_string())
+        // };
+        // let res = query(deps.as_ref(), mock_env(), msg).unwrap();
+        // let user: User = from_binary(&res).unwrap();
+        // assert_eq!(user.name, "ciuz");
+
+        let msg = QueryMsg::ListUser {};
+        let res = query(deps.as_ref(), mock_env(), msg).unwrap();
+        let users: Vec<User> = from_binary(&res).unwrap();
+        assert_eq!(users.len(), 0);
+    }
 
     #[test]
     fn proper_initialization() {
