@@ -15,7 +15,7 @@ use crate::utils::generate_id;
 const CONTRACT_NAME: &str = "crates.io:neariot-cosmwasm";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[cfg_attr(feature = "library", entry_point)]
 pub fn instantiate(
     _deps: DepsMut,
     _env: Env,
@@ -23,7 +23,30 @@ pub fn instantiate(
     _msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(_deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-    Ok(Response::default())
+    let owner = _msg
+        .admin
+        .and_then(|s| _deps.api.addr_validate(s.as_str()).ok())
+        .unwrap_or(_info.sender);
+    let config = Config {
+        owner: owner.clone(),
+        cw20_addr: _deps.api.addr_validate(_msg.cw20_addr.as_str())?,
+    };
+    CONFIG.save(_deps.storage, &config)?;
+    let user = User {
+        address: owner.clone(),
+        name: "admin".to_string(),
+        total_spent: Uint128::zero(),
+        project_funded: vec![],
+        project_watched: vec![],
+        project_owned: vec![],
+    };
+    let mut users = vec![];
+    users.push(user);
+    USERS.save(_deps.storage, &users)?;
+    Ok(Response::new()
+        .add_attribute("method", "instantiate")
+        .add_attribute("owner", owner)
+        .add_attribute("cw20_addr", _msg.cw20_addr))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -122,7 +145,9 @@ pub fn execute_register_user(
     }
     users.push(user);
     USERS.save(_deps.storage, &users)?;
-    return Ok(Response::default());
+    return Ok(Response::default()
+        .add_attribute("method", "register_user")
+        .add_attribute("address", _info.sender.to_string()));
 }
 
 pub fn execute_create_project(
@@ -191,7 +216,9 @@ pub fn execute_update_project(
     });
 
     PROJECTS.save(_deps.storage, &projects)?;
-    return Ok(Response::default());
+    return Ok(Response::default()
+        .add_attribute("action", "update_project")
+        .add_attribute("project_id", _id));
 }
 
 pub fn execute_update_timestamp(
@@ -216,7 +243,7 @@ pub fn execute_update_timestamp(
     });
 
     PROJECTS.save(_deps.storage, &projects)?;
-    return Ok(Response::default());
+    return Ok(Response::default().add_attribute("action", "update_project_timestamp"));
 }
 
 pub fn execute_create_project_offer(
@@ -250,7 +277,9 @@ pub fn execute_create_project_offer(
     });
 
     PROJECTS.save(_deps.storage, &projects)?;
-    return Ok(Response::default());
+    return Ok(Response::default()
+        .add_attribute("action", "create_offer")
+        .add_attribute("project_id", _id));
 }
 
 pub fn execute_update_project_offer(
@@ -284,7 +313,9 @@ pub fn execute_update_project_offer(
     });
 
     PROJECTS.save(_deps.storage, &projects)?;
-    return Ok(Response::default());
+    return Ok(Response::default()
+        .add_attribute("action", "update_offer")
+        .add_attribute("offer_id", _offer_id));
 }
 
 pub fn execute_delete_project_offer(
@@ -309,7 +340,9 @@ pub fn execute_delete_project_offer(
     });
 
     PROJECTS.save(_deps.storage, &projects)?;
-    return Ok(Response::default());
+    return Ok(Response::default()
+        .add_attribute("action", "delete_offer")
+        .add_attribute("offer_id", _offer_id));
 }
 
 pub fn execute_buy_project_offer(
@@ -383,7 +416,12 @@ pub fn execute_buy_project_offer(
         }
     });
     PROJECTS.save(_deps.storage, &projects)?;
-    return Ok(Response::default());
+    return Ok(Response::default()
+        .add_attribute("action", "buy_project_offer")
+        .add_attribute("id", _id)
+        .add_attribute("offer_id", _offer_id)
+        .add_attribute("metadata", _metadata)
+        .add_attribute("rate", _rate.to_string()));
 }
 
 // pub fn must_pay_funds(balance: &NativeBalance, denom: &str) -> Result<Uint128, ContractError> {
@@ -427,7 +465,11 @@ pub fn execute_rate_project_offer(
         }
     });
     PROJECTS.save(_deps.storage, &projects)?;
-    return Ok(Response::default());
+    return Ok(Response::default()
+        .add_attribute("action", "rate_project_offer")
+        .add_attribute("id", _id)
+        .add_attribute("offer_id", _offer_id)
+        .add_attribute("rate", _rate.to_string()));
 }
 
 pub fn execute_watch_project(
@@ -470,7 +512,9 @@ pub fn execute_watch_project(
     });
     USERS.save(_deps.storage, &users)?;
     PROJECTS.save(_deps.storage, &projects)?;
-    return Ok(Response::default());
+    return Ok(Response::default()
+        .add_attribute("action", "watch_project")
+        .add_attribute("project_id", _id));
 }
 
 pub fn execute_unwatch_project(
@@ -501,7 +545,7 @@ pub fn execute_unwatch_project(
     });
     USERS.save(_deps.storage, &users)?;
     PROJECTS.save(_deps.storage, &projects)?;
-    return Ok(Response::default());
+    return Ok(Response::default().add_attribute("unwatched", _id));
 }
 
 pub fn execute_rate_project(
@@ -612,7 +656,10 @@ mod tests {
     fn get_user() {
         let mut deps = mock_dependencies();
 
-        let msg = InstantiateMsg {};
+        let msg = InstantiateMsg {
+            admin: Some("ciuz".to_string()),
+            cw20_addr: "cw20".to_string(),
+        };
         let info = mock_info("creator", &coins(1000, "orai"));
         let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
@@ -632,7 +679,10 @@ mod tests {
     fn get_list_users() {
         let mut deps = mock_dependencies();
 
-        let msg = InstantiateMsg {};
+        let msg = InstantiateMsg {
+            admin: Some("ciuz".to_string()),
+            cw20_addr: "cw20".to_string(),
+        };
         let info = mock_info("creator", &coins(1000, "orai"));
         let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
@@ -657,7 +707,10 @@ mod tests {
     fn proper_initialization() {
         let mut deps = mock_dependencies();
 
-        let msg = InstantiateMsg {};
+        let msg = InstantiateMsg {
+            admin: Some("ciuz".to_string()),
+            cw20_addr: "cw20".to_string(),
+        };
         let info = mock_info("creator", &coins(1000, "orai"));
         let res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
         assert_eq!(0, res.messages.len());
@@ -667,7 +720,10 @@ mod tests {
     fn register_user() {
         let mut deps = mock_dependencies();
 
-        let msg = InstantiateMsg {};
+        let msg = InstantiateMsg {
+            admin: Some("ciuz".to_string()),
+            cw20_addr: "cw20".to_string(),
+        };
         let info = mock_info("creator", &coins(1000, "orai"));
         let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
@@ -691,7 +747,10 @@ mod tests {
     fn create_project() {
         let mut deps = mock_dependencies();
 
-        let msg = InstantiateMsg {};
+        let msg = InstantiateMsg {
+            admin: Some("ciuz".to_string()),
+            cw20_addr: "cw20".to_string(),
+        };
         let info = mock_info("creator", &coins(1000, "orai"));
         let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
@@ -717,7 +776,10 @@ mod tests {
     // fn create_offer(){
     //     let mut deps = mock_dependencies();
 
-    //     let msg = InstantiateMsg {};
+    //     let msg = InstantiateMsg {
+    //     admin: Some("ciuz".to_string()),
+    //     cw20_addr: "cw20".to_string(),
+    // };
     //     let info = mock_info("creator", &coins(1000, "orai"));
     //     let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 

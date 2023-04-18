@@ -3,6 +3,13 @@ use cosmwasm_std::{Addr, Timestamp, Uint128};
 use cw_storage_plus::Item;
 
 #[cw_serde]
+pub struct Config {
+    pub owner: Addr,
+    pub cw20_addr: Addr,
+}
+
+pub const CONFIG: Item<Config> = Item::new("config");
+#[cw_serde]
 pub struct Offer {
     pub id: String,
     pub min_price: Uint128,

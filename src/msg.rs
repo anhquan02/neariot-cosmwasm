@@ -4,7 +4,11 @@ use cosmwasm_std::{Addr, Uint128};
 use crate::state::{Offer, Project, User};
 
 #[cw_serde]
-pub struct InstantiateMsg {}
+pub struct InstantiateMsg {
+    pub admin: Option<String>,
+    /// cw20_addr is the address of the allowed cw20 token
+    pub cw20_addr: String,
+}
 #[cw_serde]
 pub enum ExecuteMsg {
     // User
