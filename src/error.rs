@@ -1,13 +1,54 @@
+use std::{string::FromUtf8Error, num::TryFromIntError};
+
 use cosmwasm_std::StdError;
 use thiserror::Error;
+use cw_utils::PaymentError;
 
 #[derive(Error, Debug)]
 pub enum ContractError {
     #[error("{0}")]
     Std(#[from] StdError),
 
+    #[error("{0}")]
+    Payment(#[from] PaymentError),
+
+    #[error("Didn't send any funds")]
+    NoFunds {},
+
     #[error("Unauthorized")]
     Unauthorized {},
-    // Add any other custom errors you like here.
-    // Look at https://docs.rs/thiserror/1.0.21/thiserror/ for details.
+
+    #[error("Amount larger than 2**64, not supported by ics20 packets")]
+    AmountOverflow {},
+
+    #[error("Insufficient funds")]
+    InsufficientFunds {},
+
+    #[error("Must send '{0}' to stake")]
+    MissingDenom(String),
+
+    #[error("Sent unsupported denoms, must send '{0}' to stake")]
+    ExtraDenoms(String),
+
+    #[error("Must send valid address to stake")]
+    InvalidDenom(String),
+
+    #[error("Missed address or denom")]
+    MixedNativeAndCw20(String),
+
+    #[error("No data in ReceiveMsg")]
+    NoData {},
 }
+
+impl From<FromUtf8Error> for ContractError {
+    fn from(_: FromUtf8Error) -> Self {
+        ContractError::Std(StdError::invalid_utf8("parsing denom key"))
+    }
+}
+
+impl From<TryFromIntError> for ContractError {
+    fn from(_: TryFromIntError) -> Self {
+        ContractError::AmountOverflow {}
+    }
+}
+
