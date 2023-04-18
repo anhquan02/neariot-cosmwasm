@@ -126,7 +126,7 @@ pub fn execute_register_user(
     }
     users.push(user);
     USERS.save(_deps.storage, &users)?;
-    Ok(Response::default())
+    return Ok(Response::default());
 }
 
 pub fn execute_create_project(
@@ -169,7 +169,7 @@ pub fn execute_create_project(
     let res = Response::new()
         .add_attribute("action", "create_project")
         .add_attribute("project_id", project.clone().id);
-    Ok(res)
+    return Ok(res);
 }
 
 pub fn execute_update_project(
@@ -195,7 +195,7 @@ pub fn execute_update_project(
     });
 
     PROJECTS.save(_deps.storage, &projects)?;
-    Ok(Response::default())
+    return Ok(Response::default());
 }
 
 pub fn execute_update_timestamp(
@@ -220,7 +220,7 @@ pub fn execute_update_timestamp(
     });
 
     PROJECTS.save(_deps.storage, &projects)?;
-    Ok(Response::default())
+    return Ok(Response::default());
 }
 
 pub fn execute_create_project_offer(
@@ -254,7 +254,7 @@ pub fn execute_create_project_offer(
     });
 
     PROJECTS.save(_deps.storage, &projects)?;
-    Ok(Response::default())
+    return Ok(Response::default());
 }
 
 pub fn execute_update_project_offer(
@@ -288,7 +288,7 @@ pub fn execute_update_project_offer(
     });
 
     PROJECTS.save(_deps.storage, &projects)?;
-    Ok(Response::default())
+    return Ok(Response::default());
 }
 
 pub fn execute_delete_project_offer(
@@ -313,7 +313,7 @@ pub fn execute_delete_project_offer(
     });
 
     PROJECTS.save(_deps.storage, &projects)?;
-    Ok(Response::default())
+    return Ok(Response::default());
 }
 
 pub fn execute_buy_project_offer(
@@ -387,24 +387,24 @@ pub fn execute_buy_project_offer(
         }
     });
     PROJECTS.save(_deps.storage, &projects)?;
-    Ok(Response::default())
+    return Ok(Response::default());
 }
 
-pub fn must_pay_funds(balance: &NativeBalance, denom: &str) -> Result<Uint128, ContractError> {
-    match balance.0.len() {
-        0 => Err(ContractError::NoFunds {}),
-        1 => {
-            let balance = &balance.0;
-            let payment = balance[0].amount;
-            if balance[0].denom == denom {
-                Ok(payment)
-            } else {
-                Err(ContractError::MissingDenom(denom.to_string()))
-            }
-        }
-        _ => Err(ContractError::ExtraDenoms(denom.to_string())),
-    }
-}
+// pub fn must_pay_funds(balance: &NativeBalance, denom: &str) -> Result<Uint128, ContractError> {
+//     match balance.0.len() {
+//         0 => Err(ContractError::NoFunds {}),
+//         1 => {
+//             let balance = &balance.0;
+//             let payment = balance[0].amount;
+//             if balance[0].denom == denom {
+//                 Ok(payment)
+//             } else {
+//                 Err(ContractError::MissingDenom(denom.to_string()))
+//             }
+//         }
+//         _ => Err(ContractError::ExtraDenoms(denom.to_string())),
+//     }
+// }
 
 pub fn execute_rate_project_offer(
     _deps: DepsMut,
@@ -431,7 +431,7 @@ pub fn execute_rate_project_offer(
         }
     });
     PROJECTS.save(_deps.storage, &projects)?;
-    Ok(Response::default())
+    return Ok(Response::default());
 }
 
 pub fn execute_watch_project(
@@ -474,7 +474,7 @@ pub fn execute_watch_project(
     });
     USERS.save(_deps.storage, &users)?;
     PROJECTS.save(_deps.storage, &projects)?;
-    Ok(Response::default())
+    return Ok(Response::default());
 }
 
 pub fn execute_unwatch_project(
@@ -505,7 +505,7 @@ pub fn execute_unwatch_project(
     });
     USERS.save(_deps.storage, &users)?;
     PROJECTS.save(_deps.storage, &projects)?;
-    Ok(Response::default())
+    return Ok(Response::default());
 }
 
 pub fn execute_rate_project(
@@ -532,11 +532,11 @@ pub fn execute_rate_project(
         }
     });
     PROJECTS.save(_deps.storage, &projects)?;
-    Ok(Response::default())
+    return Ok(Response::default());
 }
 
 pub fn query_get_user(_deps: Deps, _id: Addr) -> StdResult<User> {
-    let users = USERS.load(_deps.storage)?;
+    let users = USERS.load(_deps.storage).unwrap_or_default();
     if users.is_empty() {
         return Err(StdError::generic_err("user not found"));
     }
@@ -549,7 +549,7 @@ pub fn query_list_user(_deps: Deps) -> StdResult<Vec<User>> {
     if users.is_empty() {
         users = vec![]
     }
-    Ok(users.to_owned())
+    return Ok(users.to_owned());
 }
 
 pub fn query_get_project(_deps: Deps, _id: String) -> StdResult<Project> {
@@ -561,7 +561,7 @@ pub fn query_get_project(_deps: Deps, _id: String) -> StdResult<Project> {
     if Some(project) == None {
         return Err(StdError::generic_err("project not found"));
     }
-    Ok(project.to_owned())
+    return Ok(project.to_owned());
 }
 
 pub fn query_list_project(_deps: Deps) -> StdResult<Vec<Project>> {
@@ -581,7 +581,7 @@ pub fn query_get_project_offers(_deps: Deps, _id: String) -> StdResult<Vec<Offer
     if Some(project) == None {
         return Err(StdError::generic_err("project not found"));
     }
-    Ok(project.offers.to_owned())
+    return Ok(project.offers.to_owned());
 }
 
 pub fn query_get_project_offer(_deps: Deps, _id: String, _offer_id: String) -> StdResult<Offer> {
@@ -598,7 +598,7 @@ pub fn query_get_project_offer(_deps: Deps, _id: String, _offer_id: String) -> S
         .iter()
         .find(|offer| offer.id == _offer_id)
         .unwrap();
-    Ok(offer.to_owned())
+    return Ok(offer.to_owned());
 }
 
 // #[inline]

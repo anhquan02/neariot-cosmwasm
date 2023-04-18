@@ -75,18 +75,21 @@ pub enum QueryMsg {
     // User
     #[returns(User)]
     GetUser { id: Addr },
+
     #[returns(Vec<User>)]
     ListUser {},
 
     // Project
     #[returns(Project)]
     GetProject { id: String },
+
     #[returns(Vec<Project>)]
     ListProject {},
 
     // Project Offers
     #[returns(Vec<Offer>)]
     GetProjectOffers { project_id: String },
+
     #[returns(Offer)]
     GetProjectOffer {
         project_id: String,
@@ -96,6 +99,7 @@ pub enum QueryMsg {
     // Funding
     #[returns(String)]
     GetFunding {},
+
     #[returns(String)]
     ListFunding {},
 
@@ -106,6 +110,7 @@ pub enum QueryMsg {
     // Rating
     #[returns(Project)]
     GetRating {},
+
     #[returns(Project)]
     ListRating {},
 
