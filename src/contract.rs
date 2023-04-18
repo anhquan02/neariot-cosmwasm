@@ -47,7 +47,7 @@ pub fn execute(
         ExecuteMsg::UpdateTimestamp { id, timestamp } => {
             execute_update_timestamp(_deps, _env, _info, id, timestamp)
         }
-        ExecuteMsg::DeleteProject {} => todo!(),
+        ExecuteMsg::DeleteProject {} => unimplemented!(),
         ExecuteMsg::CreateOffer {
             id,
             min_price,
@@ -97,12 +97,12 @@ pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
             project_id,
             offer_id,
         } => to_binary(&query_get_project_offer(_deps, project_id, offer_id)?),
-        QueryMsg::GetFunding {} => todo!(),
-        QueryMsg::ListFunding {} => todo!(),
-        QueryMsg::GetWatching {} => todo!(),
-        QueryMsg::GetRating {} => todo!(),
-        QueryMsg::ListRating {} => todo!(),
-        QueryMsg::GetBalance {} => todo!(),
+        QueryMsg::GetFunding {} => unimplemented!(),
+        QueryMsg::ListFunding {} => unimplemented!(),
+        QueryMsg::GetWatching {} => unimplemented!(),
+        QueryMsg::GetRating {} => unimplemented!(),
+        QueryMsg::ListRating {} => unimplemented!(),
+        QueryMsg::GetBalance {} => unimplemented!(),
     }
 }
 
